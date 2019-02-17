@@ -13,8 +13,9 @@ namespace GitClient.Utility
 
         private static GitOctoClient _intance;
         private static string _gitUrl;
-        private Credentials storeCrd;
 
+        private Credentials storeCrd;
+        private GitHubClient gitClient;
 
         public static GitOctoClient Instane(string gitUrl)
         {
@@ -26,26 +27,42 @@ namespace GitClient.Utility
             return _intance;
         }
 
-        public GitOctoClient(string gitUrl)
+        private GitOctoClient(string gitUrl)
         {
             _gitUrl = gitUrl;
         }
 
-        public async Task<bool> ValdateCredentilas(string userId, string psw)
+        //public async Task<bool> ValdateCredentilas(string userId, string psw)
+        public int ValdateCredentilas(string userId, string psw)
         {
             bool isEnterpriseGit = false;
-            var ghe = new Uri(_gitUrl);
-            var probe = new EnterpriseProbe(new ProductHeaderValue(_initApp));
-            var result = await probe.Probe(ghe);
-            if (result == EnterpriseProbeResult.Ok)
+            try
             {
-                isEnterpriseGit = true;
+                //var ghe = new Uri(_gitUrl);
+                //var probe = new EnterpriseProbe(new ProductHeaderValue(_initApp));
+                //var result = await probe.Probe(ghe);
+                //if (result == EnterpriseProbeResult.Ok)
+                //{
+                //    isEnterpriseGit = true;
+                //}
+                gitClient = new GitHubClient(new ProductHeaderValue(_initApp));
+                storeCrd = new Credentials(userId, psw);
+                gitClient.Credentials = storeCrd;
+                var user = gitClient.User.Current().Result;
+                return user.PublicRepos;
             }
-            var client = new GitHubClient(new ProductHeaderValue(_initApp));
-            storeCrd = new Credentials(userId, psw);
-            client.Credentials = storeCrd;
-            var user = await client.User.Current();
-            return isEnterpriseGit && (user.TotalPrivateRepos > 0);
+            catch (Exception ex)
+            {
+                return -1;
+            }
+        }
+
+        //public async Task<IEnumerable<Repository>> GetRepos()
+        public IEnumerable<Repository> GetRepos()
+        {
+            var repos = gitClient.Repository.GetAllForCurrent().Result;
+
+            return repos;
         }
     }
 }
