@@ -1,4 +1,5 @@
-﻿using System;
+using GitClient.Utility;
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.ComponentModel;
@@ -58,8 +59,20 @@ namespace GitClient
                 isValidData = false;
                 formValidationErr.Add("Password is manadatory");
             }
-
-
+            int retVal = GitOctoClient.Instane(gheUrl).ValdateCredentilas(userId, gitPsw);
+            if (retVal < 0)
+            {
+                isValidData = false;
+                formValidationErr.Add("Invalid login details, please try again");
+                txtBoxPassword.Text = "";
+                txtBoxPassword.PlaceHolderText = "Enter Your GitHub Password";
+            }
+            else if(retVal == 0)
+            {
+                isValidData = false;
+                formValidationErr.Add("Login Successful, but you dont have any repositories, please use diffrent login");
+                ResetLoginControls();
+            }
 
             if (isValidData)
             {
@@ -73,6 +86,9 @@ namespace GitClient
                 tpMain.SetColumn(_stpGitSearch, 0);
                 tpMain.SetRow(_stpGitSearch, 1);
                 tpMain.SetColumnSpan(_stpGitSearch, 2);
+
+                lstBoxRepos.DataSource = GitOctoClient.Instane(gheUrl).GetRepos();
+                lstBoxRepos.DisplayMember = "Name";
             }
             else
             {
